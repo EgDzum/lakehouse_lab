@@ -32,7 +32,7 @@ def build_feature_table(silver_path: str, gold_feat_path: str, n: int):
     encoded = (
         df.select(
             ["ArrDelayMinutes", "Distance", "dep_hour", 
-             "day_of_week", "Origin", "Flight_Number_Marketing_Airline"]
+             "day_of_week", "Flight_Number_Marketing_Airline", 'Origin']
             )
         .with_columns(
             pl.when(pl.col('ArrDelayMinutes') >= n)

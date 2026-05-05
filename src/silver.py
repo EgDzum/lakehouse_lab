@@ -116,6 +116,18 @@ class SilverProcessor:
                 )
         print("Таблица успешно создана")
 
+def optimize_zorder(dt_table_path: str) -> None:
+    dt = DeltaTable(dt_table_path)
+    dt.optimize.compact()
+
+def vacuum_old(dt_table_path: str, retention_hours: int = 24) -> None:
+    dt = DeltaTable(dt_table_path)
+    dt.vacuum(
+        retention_hours=retention_hours,
+        enforce_retention_duration=False,
+        dry_run=False
+        )
+
 if __name__ == "__main__":
     # Создание экземпляра процессора
     processor = SilverProcessor(

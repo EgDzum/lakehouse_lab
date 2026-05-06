@@ -181,7 +181,6 @@ class FlightDelayModel:
 
             mlflow.sklearn.log_model(self.model, "model")
 
-            print("\nРЕЗУЛЬТАТЫ XGBOOST:")
             for k, v in metrics.items():
                 print(f"{k.upper()}: {v:.4f}")
         
@@ -203,17 +202,15 @@ class FlightDelayModel:
 
         model = self.model.named_steps['model']
         
-        if self.ml_task == 'cls':
-            importance_df = pd.DataFrame({
-                'importance': model.feature_importances_
-            }).sort_values('importance', ascending=False)
-        else:
-            abs_coefs = np.abs(model.coef_)
-            importance_normalized = abs_coefs / abs_coefs.sum()
+        abs_coefs = np.abs(model.coef_)
+        importance_normalized = abs_coefs / abs_coefs.sum()
 
-            importance_df = pd.DataFrame({
-                'importance': importance_normalized
-            }).sort_values('importance', ascending=False)
+        if self.ml_task == 'cls':
+            importance_normalized = importance_normalized[0]
+
+        importance_df = pd.DataFrame({
+            'importance': importance_normalized
+        }).sort_values('importance', ascending=False)
 
         print("\nTOP-10 FEATURES:")
         print(importance_df.head(10))

@@ -42,7 +42,9 @@ def main():
 
     # 5. ML
     # XGBoost classifier
-    mlflow.set_experiment("flight_delay_xgboost")
+    mlflow.set_experiment("flight_delay_logreg")
+    # чтобы перейти к задаче регрессии нужно поменять аргумент ml_task
+    # ml_task имеет два значения: 'reg' и 'cls'
     xgb_model = FlightDelayModel(test_size=0.2, random_state=42, ml_task='cls')
 
     xgb_model.load_data('./storage/gold/ml_mart')

@@ -70,10 +70,6 @@ class BronzeProcessor:
     def get_summary(self) -> dict:
         """
         Возвращает краткую информацию о данных.
-        
-        Returns:
-        --------
-        dict: Словарь с информацией о данных
         """
         if self._full_df is None:
             self._load_csv()
@@ -88,7 +84,7 @@ class BronzeProcessor:
         }
 
 if __name__ == "__main__":
-    # Создание экземпляра класса
+    # Создание класса для обработки данных
     processor = BronzeProcessor(
         csv_path="./raw_data/flight_data_2018_2024.csv",
         delta_path="./storage/bronze",

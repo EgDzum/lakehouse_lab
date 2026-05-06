@@ -27,21 +27,21 @@ def main():
         silver_path=silver_path,
         partition_cols=['FlightDate'] 
     )
-    # Запуск Silver обработки
+    # 2. Запуск Silver обработки
     silver_processor.process()
 
-    # # 3. Оптимизация
+    # 3. Оптимизация
     optimize_zorder(silver_path)
     vacuum_old(silver_path)
 
-    # # 4. Gold: агрегаты и feature table
+    # 4. Gold: агрегаты и feature table
     gold_agg_path = './storage/gold/agg_mart'
     gold_feat_path = './storage/gold/ml_mart'
     build_aggregates(silver_path, gold_agg_path)
     build_feature_table(silver_path, gold_feat_path, 15)
 
-    # # 5. ML
-    # XGB classifier
+    # 5. ML
+    # XGBoost classifier
     mlflow.set_experiment("flight_delay_xgboost")
     xgb_model = FlightDelayModel(test_size=0.2, random_state=42, ml_task='cls')
 
@@ -51,6 +51,7 @@ def main():
     xgb_model.train()
 
     xgb_importance = xgb_model.get_feature_importance()
+    # нам нужно закончить трекинг предыдущего эксперимента
     mlflow.end_run()
 
     # Ridge regression

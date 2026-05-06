@@ -7,15 +7,6 @@ from typing import Optional
 class SilverProcessor:
     """
     Класс для обработки и записи Silver слоя данных
-    
-    Parameters
-    ----------
-    bronze_path : str
-        Путь к Bronze таблице (Delta Lake)
-    silver_path : str
-        Путь для записи Silver таблицы (Delta Lake)
-    partition_cols : list, optional
-        Колонки для партиционирования, по умолчанию ['FlightDate']
     """
     
     def __init__(self, bronze_path: str, silver_path: str, partition_cols: Optional[list] = None):
@@ -92,6 +83,8 @@ class SilverProcessor:
         processed_data = self._load_bronze_data()
                 
         try:
+            # если таблица создана, то мы только добавляем 
+            # новые данные, не переписывая старые
             dt = DeltaTable(self.silver_path)
         
             predicate = (
@@ -107,17 +100,18 @@ class SilverProcessor:
             ).when_not_matched_insert_all().execute()
             
         except Exception as e:
-            # Если таблица не существует, создаем новую
+            # Если таблица не существует, создаем её
             write_deltalake(
                 self.silver_path,
                 processed_data,
-                mode="overwrite",
+                mode="append",
                 partition_by=self.partition_cols
                 )
-        print("Таблица успешно создана")
+            print("Таблица успешно создана")
 
 def optimize_zorder(dt_table_path: str) -> None:
     dt = DeltaTable(dt_table_path)
+    dt.optimize.z_order(['route'])
     dt.optimize.compact()
 
 def vacuum_old(dt_table_path: str, retention_hours: int = 24) -> None:

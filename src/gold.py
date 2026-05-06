@@ -1,6 +1,6 @@
 import polars as pl
 
-def build_aggregates(silver_path: str, gold_agg_path: str):
+def build_aggregates(silver_path: str, gold_agg_path: str) -> None:
     df = pl.scan_delta(silver_path)
     
     aggregations = [
@@ -14,7 +14,6 @@ def build_aggregates(silver_path: str, gold_agg_path: str):
         }
     ]
     
-    # Process each aggregation
     for agg_config in aggregations:
         result = (
             df.group_by(agg_config["group_by"])
@@ -26,7 +25,7 @@ def build_aggregates(silver_path: str, gold_agg_path: str):
         )
         result.write_delta(agg_config["output_path"], mode="overwrite")
 
-def build_feature_table(silver_path: str, gold_feat_path: str, n: int):
+def build_feature_table(silver_path: str, gold_feat_path: str, n: int) -> None:
     path = gold_feat_path
     df = pl.scan_delta(silver_path)
     encoded = (

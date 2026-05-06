@@ -15,13 +15,11 @@ from sklearn.metrics import (
     mean_squared_error, 
     r2_score, 
     mean_absolute_error)
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, LogisticRegression
 
-from xgboost import XGBClassifier
 
 import mlflow
 import mlflow.sklearn
-import mlflow.xgboost
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -92,12 +90,7 @@ class FlightDelayModel:
         )
 
         if self.ml_task == "cls":
-            model = XGBClassifier(
-                # n_estimators=100,
-                # max_depth=6,
-                # learning_rate=0.1,
-                # random_state=self.random_state
-                )
+            model = LogisticRegression()
         else:
             model = Ridge(random_state=self.random_state)
 
@@ -113,15 +106,14 @@ class FlightDelayModel:
         if self.model is None:
             raise ValueError("Сначала вызовите create_model()")
 
-        if self.ml_task == 'cls':
-            mlflow.xgboost.autolog()
-        else:
-            mlflow.sklearn.autolog()
+  
+
+        mlflow.sklearn.autolog()
 
         with mlflow.start_run():
             # Параметры
             if self.ml_task == 'cls':
-                mlflow.log_param("model", "XGBoost")
+                mlflow.log_param("model", "Logistic Regression")
             else:
                 mlflow.log_param("model", "Ridge")
 
@@ -130,39 +122,35 @@ class FlightDelayModel:
 
             # Обучение
             if self.ml_task == 'cls':
-                # self.model.fit(self.X_train, self.y_train)
                 param_grid = {
-                    'model__n_estimators': [100, 150, 200, 300],
-                    'model__max_depth': [4, 5, 6],
-                    'model__use_label_encoder': [False],
-                    'model__random_state': [self.random_state]
+                    "model__C": [1, 10, 100],
+                    "model__max_iter": [100, 300],
+                    "model__class_weight": ['balanced']
                     }
-                xgb_grid = GridSearchCV(
+                logreg_grid = GridSearchCV(
                     self.model,
                     param_grid,
-                    cv=5,
+                    cv=3,
                     scoring='neg_log_loss',
-                    n_jobs=-1,
                     verbose=1
                 )
-                xgb_grid.fit(self.X_train, self.y_train)
+                logreg_grid.fit(self.X_train, self.y_train)
             else:
                 param_grid = {
-                    'model__alpha': [0.1, 0.5, 1, 10, 100],
+                    'model__alpha': [1, 10, 50, 100],
                     }
 
                 ridge_grid = GridSearchCV(
                     self.model,
                     param_grid,
-                    cv=5,
+                    cv=3,
                     scoring='neg_mean_squared_error',
-                    n_jobs=-1,
                     verbose=1
                 )
                 ridge_grid.fit(self.X_train, self.y_train)
             
             if self.ml_task == 'cls':
-                self.model = xgb_grid.best_estimator_
+                self.model = logreg_grid.best_estimator_
                 y_pred = self.predict(self.X_test)
                 y_pred_proba = self.predict_proba(self.X_test)
 
@@ -174,7 +162,7 @@ class FlightDelayModel:
                     'roc_auc': roc_auc_score(self.y_test, y_pred_proba)
                 }
 
-                self.classification_results['XGBoost'] = metrics
+                self.classification_results['LogisticRegression'] = metrics
             else: 
                 self.model = ridge_grid.best_estimator_
                 y_pred = self.model.predict(self.X_test)
